@@ -7,7 +7,7 @@ import logging
 app = Flask(__name__)
 CORS(app)  # Enable Cross-Origin Resource Sharing (CORS)
 
-# Initialize query handler
+# Initialize query handler, responder, and memory context
 query_handler, responder, memory = setup()
 
 @app.route('/chat', methods=['POST'])
@@ -23,9 +23,11 @@ def chat():
         memory_context = memory.get_context()
 
         # Handle the query and get the response
-        context = query_handler.handle(query)
+        context = query_handler.handle(query, memory)
         full_context = f"{memory_context}\n\n{context}"
-        answer = responder.respond(query, full_context)
+        
+        # Updated: Pass memory to responder
+        answer = responder.respond(query, full_context, memory)
 
         # Convert the answer from Markdown to HTML
         formatted_answer = markdown2.markdown(answer)
@@ -33,6 +35,8 @@ def chat():
         # Save the conversation history in memory
         if "technical difficulties" not in answer and "unable to provide an answer" not in answer:
             memory.add(query, answer)
+            # New: Update the current context based on the question and answer
+            memory.set_current_context(f"{query} - {answer[:100]}...")
 
         # Send the HTML response
         return jsonify({"answer": formatted_answer}), 200
@@ -41,4 +45,4 @@ def chat():
         return jsonify({"error": "An error occurred"}), 500
 
 if __name__ == "__main__":
-    app.run(port=5000, debug=True,use_reloader=False)
+    app.run(port=5000, debug=True, use_reloader=False)
