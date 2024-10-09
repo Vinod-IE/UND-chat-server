@@ -37,6 +37,10 @@ def chat():
             memory.add(query, answer)
             # New: Update the current context based on the question and answer
             memory.set_current_context(f"{query} - {answer[:100]}...")
+        
+        check_table = query_handler.is_table_related(query)
+        if check_table:
+            formatted_answer = markdown2.markdown(text=answer, extras=['tables'])
 
         # Send the HTML response
         return jsonify({"answer": formatted_answer}), 200

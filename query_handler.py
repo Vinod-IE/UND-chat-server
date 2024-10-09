@@ -1,4 +1,5 @@
 from timings import time_it, logger
+import difflib
 
 class QueryHandler:
     def __init__(self, db_manager):
@@ -26,3 +27,12 @@ class QueryHandler:
         for doc in documents:
             context.append(f"Text: {doc.page_content}")
         return "\n\n".join(context)
+    
+    def is_table_related(self, query):
+        words = query.lower().split()
+        table_keywords = ['table', 'tables', 'datatable', 'spreadsheet', 'tabular', 'matrix', 'grid', 'pivot table', 'rows', 'columns']
+        for word in words:
+            matches = difflib.get_close_matches(word, table_keywords, n=1, cutoff=0.8)  # 80% similarity
+            if matches:
+                return True
+        return False
